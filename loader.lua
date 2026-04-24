@@ -4,13 +4,8 @@ local API_URL     = "https://hwid-api-production.up.railway.app/verify"
 local HMAC_SECRET = "k8X2z9F4j7W1q5M3n6P0rT"
 local SCRIPT_URL  = "https://raw.githubusercontent.com/lefahub/lefatp11/refs/heads/main/lefatp11"
 
--- Detectar função de request do executor
-local httpRequest = (syn and syn.request) or (http and http.request) or (http_request) or (request) or nil
-
-if not httpRequest then
-    error("[AUTH] Executor não suportado.")
-    return
-end
+-- Synapse X usa syn.request
+local httpRequest = syn.request
 
 local function band(a,b) local r=0 for i=0,31 do local x=a%2 local y=b%2 if x==1 and y==1 then r=r+2^i end a=(a-x)/2 b=(b-y)/2 end return r end
 local function bxor(a,b) local r=0 for i=0,31 do local x=a%2 local y=b%2 if x~=y then r=r+2^i end a=(a-x)/2 b=(b-y)/2 end return r end
