@@ -4,8 +4,8 @@ local API_URL     = "https://hwid-api-production.up.railway.app/verify"
 local HMAC_SECRET = "k8X2z9F4j7W1q5M3n6P0rT"
 local SCRIPT_URL  = "https://raw.githubusercontent.com/lefahub/lefatp11/refs/heads/main/lefatp11"
 
--- Synapse X usa syn.request
 local httpRequest = syn.request
+local unpack = unpack or table.unpack
 
 local function band(a,b) local r=0 for i=0,31 do local x=a%2 local y=b%2 if x==1 and y==1 then r=r+2^i end a=(a-x)/2 b=(b-y)/2 end return r end
 local function bxor(a,b) local r=0 for i=0,31 do local x=a%2 local y=b%2 if x~=y then r=r+2^i end a=(a-x)/2 b=(b-y)/2 end return r end
@@ -24,7 +24,7 @@ local function sha256(msg)
         local w={}
         for j=1,16 do local b=i+(j-1)*4 w[j]=((msg:byte(b) or 0)*2^24)+((msg:byte(b+1) or 0)*2^16)+((msg:byte(b+2) or 0)*2^8)+(msg:byte(b+3) or 0) end
         for j=17,64 do local s0=bxor(bxor(rrot(w[j-15],7),rrot(w[j-15],18)),math.floor(w[j-15]/2^3)) local s1=bxor(bxor(rrot(w[j-2],17),rrot(w[j-2],19)),math.floor(w[j-2]/2^10)) w[j]=add32(w[j-16],s0,w[j-7],s1) end
-        local a,b,c,d,e,f,g,h=table.unpack(H)
+        local a,b,c,d,e,f,g,h=unpack(H)
         for j=1,64 do local S1=bxor(bxor(rrot(e,6),rrot(e,11)),rrot(e,25)) local ch=bxor(band(e,f),band(bxor(e,0xffffffff),g)) local temp1=add32(h,S1,ch,K[j],w[j]) local S0=bxor(bxor(rrot(a,2),rrot(a,13)),rrot(a,22)) local maj=bxor(bxor(band(a,b),band(a,c)),band(b,c)) local temp2=add32(S0,maj) h=g g=f f=e e=add32(d,temp1) d=c c=b b=a a=add32(temp1,temp2) end
         H[1]=add32(H[1],a) H[2]=add32(H[2],b) H[3]=add32(H[3],c) H[4]=add32(H[4],d) H[5]=add32(H[5],e) H[6]=add32(H[6],f) H[7]=add32(H[7],g) H[8]=add32(H[8],h)
     end
