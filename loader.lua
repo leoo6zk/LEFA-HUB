@@ -1,11 +1,29 @@
+-- O usuário define a key aqui em cima antes de executar
+-- getenv().key = "SUA-KEY-AQUI"  ← isso é só pra mostrar, não funciona no Synapse
+-- No Synapse a key vem da linha antes do loadstring
+
 local HttpService = game:GetService("HttpService")
+local unpack = unpack or table.unpack
 
 local API_URL     = "https://hwid-api-production.up.railway.app/verify"
 local HMAC_SECRET = "k8X2z9F4j7W1q5M3n6P0rT"
 local SCRIPT_URL  = "https://raw.githubusercontent.com/lefahub/lefatp11/refs/heads/main/lefatp11"
 
+-- Pegar key de múltiplas formas (compatível com todos executores)
+local key = ""
+if getenv then
+    key = getenv().key or ""
+end
+if key == "" and _G and _G.key then
+    key = tostring(_G.key)
+end
+
+if key == "" then
+    error("[AUTH] Key não fornecida. Use: _G.key = 'SUA-KEY'")
+    return
+end
+
 local httpRequest = syn.request
-local unpack = unpack or table.unpack
 
 local function band(a,b) local r=0 for i=0,31 do local x=a%2 local y=b%2 if x==1 and y==1 then r=r+2^i end a=(a-x)/2 b=(b-y)/2 end return r end
 local function bxor(a,b) local r=0 for i=0,31 do local x=a%2 local y=b%2 if x~=y then r=r+2^i end a=(a-x)/2 b=(b-y)/2 end return r end
@@ -54,11 +72,11 @@ local function getHWID()
     return uid.."_"..age.."_"..extra
 end
 
-local function verificar(key)
+local function verificar(k)
     local hwid=getHWID()
     local timestamp=tostring(math.floor(os.time()))
     local nonce=generateNonce()
-    local body=HttpService:JSONEncode({key=key,hwid=hwid})
+    local body=HttpService:JSONEncode({key=k,hwid=hwid})
     local assinatura=hmac_sha256(HMAC_SECRET,body..":"..timestamp)
 
     local ok,response=pcall(function()
@@ -77,9 +95,6 @@ local function verificar(key)
     if not data.success then error("[AUTH] "..(data.reason or "Negado.")) return end
     return true
 end
-
-local key=getenv and getenv().key or ""
-if key=="" then error("[AUTH] Key não fornecida.") return end
 
 local ok,err=pcall(function()
     if verificar(key) then
