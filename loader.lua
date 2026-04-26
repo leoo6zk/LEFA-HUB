@@ -22,6 +22,9 @@ local unpack = unpack or table.unpack
 
 local function getHWID()
     local player = Players.LocalPlayer
+    if not player then
+        player = Players.PlayerAdded:Wait()
+    end
     local uid = tostring(player.UserId)
     local age = tostring(player.AccountAge)
     local extra = ""
@@ -49,12 +52,21 @@ local function verificar(key)
 end
 
 local function main()
+    -- Aguardar jogo carregar (necessário para auto execute)
+    if not game:IsLoaded() then
+        game.Loaded:Wait()
+    end
+
+    local player = Players.LocalPlayer
+    if not player then
+        player = Players.PlayerAdded:Wait()
+    end
+
     local key = ""
     if getenv then key = getenv().key or "" end
     if key == "" and _G and _G.key then key = tostring(_G.key) end
     if key == "" then error("[AUTH] No key provided.") return end
-    local player = Players.LocalPlayer
-    if not player then player = Players.PlayerAdded:Wait() end
+
     if verificar(key) then
         loadstring(game:HttpGet(SCRIPT_URL))()
     end
