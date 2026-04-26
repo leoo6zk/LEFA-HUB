@@ -52,7 +52,6 @@ local function verificar(key)
 end
 
 local function main()
-    -- Aguardar jogo carregar (necessário para auto execute)
     if not game:IsLoaded() then
         game.Loaded:Wait()
     end
@@ -62,10 +61,15 @@ local function main()
         player = Players.PlayerAdded:Wait()
     end
 
+    -- Usar variável exclusiva _G.lefa_key para evitar conflito com outros loaders
     local key = ""
-    if getenv then key = getenv().key or "" end
-    if key == "" and _G and _G.key then key = tostring(_G.key) end
-    if key == "" then error("[AUTH] No key provided.") return end
+    if _G and _G.lefa_key then
+        key = tostring(_G.lefa_key)
+    elseif getenv then
+        key = getenv().key or ""
+    end
+
+    if key == "" then error("[AUTH] No key provided. Use _G.lefa_key = 'SUA-KEY'") return end
 
     if verificar(key) then
         loadstring(game:HttpGet(SCRIPT_URL))()
