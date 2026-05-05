@@ -184,11 +184,14 @@ local function verificarSeguranca()
     end
 
     -- ── 12. Anti-metatable spy ────────────────────────────
-    -- Alguns spys colocam __index nos serviços para interceptar
-    local mt = _getmetatable(game)
-    if mt and _rawget(mt, "__newindex") then
-        _pcall(function() _rawset(mt, "__newindex", nil) end)
-    end
+    _pcall(function()
+        local mt = _getmetatable(game)
+        if mt and _type(mt) == "table" then
+            if _rawget(mt, "__newindex") then
+                _rawset(mt, "__newindex", nil)
+            end
+        end
+    end)
 
     -- ── 13. Anti-filesystem spy ───────────────────────────
     -- Verificar se writefile ainda está bloqueado
