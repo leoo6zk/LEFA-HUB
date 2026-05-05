@@ -133,24 +133,51 @@ local function main()
         return
     end
 
-    if not checkSpy() then return end
+    -- Rodar checkSpy e verificar em paralelo
+    local spyOk = true
+    local spyDone = false
+    local hwidOk = false
+    local hwidDone = false
 
-    if verificar(key) then
-        -- Restaurar writefile antes de executar o script
-        if _wf then writefile = _wf end
-        if appendfile then appendfile = nil end
+    -- Thread 1: verificar spy (instantâneo)
+    task.spawn(function()
+        spyOk = checkSpy()
+        spyDone = true
+    end)
 
-        local content = game:HttpGet(SCRIPT_URL)
-        local fn, err = loadstring(content)
-        content = nil
+    -- Thread 2: verificar HWID (precisa de rede)
+    task.spawn(function()
+        hwidOk = verificar(key) == true
+        hwidDone = true
+    end)
 
-        if not fn then
-            warn("[AUTH] Failed to load script: " .. tostring(err))
-            return
-        end
-
-        fn()
+    -- Aguardar ambos terminarem
+    while not (spyDone and hwidDone) do
+        task.wait()
     end
+
+    if not spyOk then return end
+    if not hwidOk then return end
+
+    -- Executar script
+    local scriptContent = game:HttpGet(SCRIPT_URL)
+    local fn, err = loadstring(scriptContent)
+    scriptContent = nil
+
+    if not fn then
+        warn("[AUTH] Failed to load script: " .. tostring(err))
+        return
+    end
+
+    if _wf then writefile = _wf end
+    fn()
+
+    -- Monitor contínuo em background
+    task.spawn(function()
+        while task.wait(5) do
+            if not checkSpy() then break end
+        end
+    end)
 end
 
 local ok, err = pcall(main)
