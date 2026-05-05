@@ -261,79 +261,18 @@ local function verificar(key)
 end
 
 -- ═══════════════════════════════════════════════════════════
--- DESCRIPTOGRAFIA XOR + BASE64
--- ═══════════════════════════════════════════════════════════
--- Chave de descriptografia (multi-byte XOR)
-local DEC_KEY = {0x4C,0x45,0x46,0x41,0x53,0x45,0x43,0x52,0x45,0x54,0x4B,0x45,0x59,0x21,0x40,0x23}
-local DEC_KEY_LEN = #DEC_KEY
-
-local function b64Decode(data)
-    local b64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-    local lookup = {}
-    for i = 1, #b64chars do
-        lookup[b64chars:sub(i,i)] = i - 1
-    end
-    local result = {}
-    local padding = data:match("(=*)$")
-    data = data:gsub("=", "")
-    for i = 1, #data, 4 do
-        local a = lookup[data:sub(i,i)] or 0
-        local b = lookup[data:sub(i+1,i+1)] or 0
-        local c = lookup[data:sub(i+2,i+2)] or 0
-        local d = lookup[data:sub(i+3,i+3)] or 0
-        local n = a * 262144 + b * 4096 + c * 64 + d
-        table.insert(result, string.char(
-            math.floor(n / 65536),
-            math.floor(n / 256) % 256,
-            n % 256
-        ))
-    end
-    local decoded = table.concat(result)
-    if #padding >= 2 then
-        decoded = decoded:sub(1, -3)
-    elseif #padding == 1 then
-        decoded = decoded:sub(1, -2)
-    end
-    return decoded
-end
-
-local function xorDecrypt(data)
-    local result = {}
-    for i = 1, #data do
-        local byte = string.byte(data, i)
-        local keyByte = DEC_KEY[((i - 1) % DEC_KEY_LEN) + 1]
-        result[i] = string.char(bit32.bxor(byte, keyByte))
-    end
-    return table.concat(result)
-end
-
-local function descriptografar(encryptedB64)
-    local decoded = b64Decode(encryptedB64)
-    return xorDecrypt(decoded)
-end
-
--- ═══════════════════════════════════════════════════════════
--- EXECUTAR SCRIPT COM PROTEÇÃO MÁXIMA + DESCRIPTOGRAFIA
+-- EXECUTAR SCRIPT COM PROTEÇÃO MÁXIMA
 -- ═══════════════════════════════════════════════════════════
 local function executarScript(url)
-    -- Baixar conteúdo criptografado
-    local encryptedContent = game:HttpGet(url)
+    local content = game:HttpGet(url)
 
-    -- Verificar novamente antes de executar
     if not verificarSeguranca() then
-        encryptedContent = nil
+        content = nil
         return
     end
 
-    -- Descriptografar em memória (interceptor de rede só vê dados criptografados)
-    local decryptedContent = descriptografar(encryptedContent)
-    encryptedContent = nil -- limpar criptografado
-
-    -- Usar loadstring ORIGINAL salvo no início
-    local fn, err = _ls(decryptedContent)
-
-    -- Limpar conteúdo da memória imediatamente
-    decryptedContent = nil
+    local fn, err = _ls(content)
+    content = nil
     url = nil
 
     if not fn then
@@ -341,10 +280,7 @@ local function executarScript(url)
         return
     end
 
-    -- Restaurar ambiente antes de executar o script
     restaurarAmbiente()
-
-    -- Executar
     fn()
 end
 
