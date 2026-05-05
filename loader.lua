@@ -38,10 +38,19 @@ local SCRIPT_NAME  = "lefa"
 local ENCODED_URL = {66,94,94,90,89,16,5,5,88,75,93,4,77,67,94,66,95,72,95,89,79,88,73,69,68,94,79,68,94,4,73,69,71,5,70,95,75,94,90,90,5,126,122,5,88,79,76,89,5,66,79,75,78,89,5,71,75,67,68,5,94,90,4,70,95,75}
 local KEY_XOR = 42
 
+local function bxor(a, b)
+    local r, m = 0, 1
+    for i = 1, 24 do
+        local x = a % 2; local y = b % 2
+        if x ~= y then r = r + m end
+        a = (a - x) / 2; b = (b - y) / 2; m = m * 2
+    end
+    return r
+end
 local function decodeUrl()
     local result = {}
     for i, v in _ipairs(ENCODED_URL) do
-        result[i] = string.char(bit32.bxor(v, KEY_XOR))
+        result[i] = string.char(bxor(v, KEY_XOR))
     end
     return table.concat(result)
 end
