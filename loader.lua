@@ -8,9 +8,9 @@ local _ls          = loadstring
 local _pcall       = pcall
 local _tostring    = tostring
 local _type        = type
-local _rawget      = rawget
-local _rawset      = rawset
-local _rawequal    = rawequal
+local _rawget      = rawget or function(t,k) return t[k] end
+local _rawset      = rawset or function(t,k,v) t[k]=v end
+local _rawequal    = rawequal or function(a,b) return a==b end
 local _setmetatable= setmetatable
 local _getmetatable= getmetatable
 local _pairs       = pairs
@@ -18,9 +18,9 @@ local _ipairs      = ipairs
 local _select      = select
 local _unpack      = unpack or table.unpack
 local _require     = require
-local _print       = print
-local _warn        = warn
-local _error       = error
+local _print       = print or function() end
+local _warn        = warn or print or function() end
+local _error       = error or function(e) end
 local _writefile   = writefile or function() end
 local _readfile    = readfile or function() end
 local _isfile      = isfile or function() return false end
